@@ -1,0 +1,68 @@
+services:
+  init_airflow:
+    image: apache/airflow:latest
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./scripts/init_airflow.sh:/scripts/init_airflow.sh
+    networks:
+      - elt_network
+    environment:
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://icanooo:airflow@postgres/airflow
+    entrypoint: ["/bin/bash", "/scripts/init_airflow.sh"]
+    healthcheck:
+      test: ["CMD-SHELL", "airflow db check"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  webserver:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    user: root
+    depends_on:
+      init_airflow:
+        condition: service_healthy
+    networks:
+      - elt_network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./var/run/docker.sock:/var/run/docker.sock
+      - ./keys/credentials.json:/opt/airflow/keys/credentials.json
+      - ./airbnb_euskadi:/opt/airflow/airbnb_euskadi
+      - ./profiles:/opt/airflow/profiles
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+    command: webserver
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    user: root
+    depends_on:
+      init_airflow:
+        condition: service_healthy
+    networks:
+      - elt_network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./var/run/docker.sock:/var/run/docker.sock
+      - ./keys/credentials.json:/opt/airflow/keys/credentials.json
+      - ./airbnb_euskadi:/opt/airflow/airbnb_euskadi
+      - ./profiles:/opt/airflow/profiles
+    env_file:
+      - .env
+    command: scheduler
+
+networks:
+  elt_network:
+    driver: bridge
