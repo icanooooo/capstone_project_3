@@ -1,15 +1,12 @@
 services:
   init_airflow:
     image: apache/airflow:latest
-    depends_on:
-      postgres:
-        condition: service_healthy
     volumes:
       - ./scripts/init_airflow.sh:/scripts/init_airflow.sh
     networks:
-      - elt_network
+      - application-network
     environment:
-      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://icanooo:airflow@postgres/airflow
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@airflow_db:5432/airflow_db
     entrypoint: ["/bin/bash", "/scripts/init_airflow.sh"]
     healthcheck:
       test: ["CMD-SHELL", "airflow db check"]
@@ -26,7 +23,7 @@ services:
       init_airflow:
         condition: service_healthy
     networks:
-      - elt_network
+      - application-network
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
@@ -50,7 +47,7 @@ services:
       init_airflow:
         condition: service_healthy
     networks:
-      - elt_network
+      - application-network
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
@@ -64,5 +61,5 @@ services:
     command: scheduler
 
 networks:
-  elt_network:
-    driver: bridge
+  application-network:
+    external: true

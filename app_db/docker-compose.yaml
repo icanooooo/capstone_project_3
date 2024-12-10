@@ -2,10 +2,14 @@ services:
   application_postgres:
     image: postgres:latest
     ports:
-      - "5432:5432"
+      - "5432:5432" # localhost 5432 : docker container port 5432
     environment:
       POSTGRES_DB: application_db
       POSTGRES_USER: airflow
       POSTGRES_PASSWORD: airflow
     volumes:
-      - destination_db_data:/var/lib/postgresql/data
+      - application_db:/var/lib/postgresql/data
+
+networks:
+  application-network:
+    external: true
