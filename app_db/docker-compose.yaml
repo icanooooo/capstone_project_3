@@ -8,7 +8,10 @@ services:
       POSTGRES_USER: airflow
       POSTGRES_PASSWORD: airflow
     volumes:
-      - application_db:/var/lib/postgresql/data
+      - application_db_volumes:/var/lib/postgresql/data
+
+volumes:
+  application_db_volumes:
 
 networks:
   application-network:

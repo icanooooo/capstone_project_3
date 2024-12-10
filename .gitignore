@@ -1,1 +1,3 @@
 credentials/
+application_db_volumes/
+airflow_db_volumes/
