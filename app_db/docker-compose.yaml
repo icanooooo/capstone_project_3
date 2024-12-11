@@ -3,10 +3,12 @@ services:
     image: postgres:latest
     ports:
       - "5432:5432" # localhost 5432 : docker container port 5432
+    networks:
+      - application-network
     environment:
       POSTGRES_DB: application_db
-      POSTGRES_USER: airflow
-      POSTGRES_PASSWORD: airflow
+      POSTGRES_USER: library_admin
+      POSTGRES_PASSWORD: letsreadbook
     volumes:
       - application_db_volumes:/var/lib/postgresql/data
 

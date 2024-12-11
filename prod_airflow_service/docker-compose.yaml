@@ -28,10 +28,9 @@ services:
       - "host.docker.internal:host-gateway"
     volumes:
       - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/dags/helper:/opt/airflow/dags/helper
       - ./var/run/docker.sock:/var/run/docker.sock
       - ./keys/credentials.json:/opt/airflow/keys/credentials.json
-      - ./airbnb_euskadi:/opt/airflow/airbnb_euskadi
-      - ./profiles:/opt/airflow/profiles
     env_file:
       - .env
     ports:
@@ -54,8 +53,6 @@ services:
       - ./airflow/dags:/opt/airflow/dags
       - ./var/run/docker.sock:/var/run/docker.sock
       - ./keys/credentials.json:/opt/airflow/keys/credentials.json
-      - ./airbnb_euskadi:/opt/airflow/airbnb_euskadi
-      - ./profiles:/opt/airflow/profiles
     env_file:
       - .env
     command: scheduler
