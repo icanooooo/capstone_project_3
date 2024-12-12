@@ -36,22 +36,21 @@ def quick_command(query, host, port, dbname, user, password, vals=None):
     conn.close()
 
 def ensure_table():
-    ensure_table_query = """
-    CREATE TABLE IF NOT EXISTS author_table (
-        id INTEGER PRIMARY KEY,
-        name VARCHAR(50),
-        date_of_birth TIMESTAMP,
-        input_date TIMESTAMP
-    );
-"""
-    quick_command(ensure_table_query, "application_postgres", "5432", "application_db", "library_admin", "letsreadbook")
+#     ensure_table_query = """
+#     CREATE TABLE IF NOT EXISTS author_table (
+#         id INTEGER PRIMARY KEY,
+#         name VARCHAR(50),
+#         date_of_birth TIMESTAMP,
+#         input_date TIMESTAMP
+#     );
+# """
+#     quick_command(ensure_table_query, "application_postgres", "5432", "application_db", "library_admin", "letsreadbook")
 
     ensure_table_query = """
     CREATE TABLE IF NOT EXISTS books_table (
         id INTEGER PRIMARY KEY,
         name VARCHAR(50),
         CONSTRAINT author_id FOREIGN KEY (id) REFERENCES author_table(id),
-        genre VARCHAR(50),
         release_date TIMESTAMP,
         stock INTEGER,
         input_date TIMESTAMP
