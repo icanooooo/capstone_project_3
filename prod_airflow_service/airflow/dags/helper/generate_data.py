@@ -75,3 +75,21 @@ def generate_rent_data(last_id_number, book_id_list, member_id_list):
         rend_data.append(data)
 
     return rend_data
+
+def generate_all_data(book_id_number, member_id_number, rent_id_number, book_id_list=None, member_id_list=None):
+    book_data = generate_book_data(book_id_number)
+    member_data = generate_member_data(member_id_number)
+    
+    if book_id_list is None:
+        book_id_list = []
+        for i in book_data:
+            book_id_list.append(i['title'])
+
+    if member_id_list is None:
+        member_id_list = []
+        for i in member_data:
+            member_id_list.append(i['name'])
+
+    rent_data = generate_rent_data(rent_id_number, book_id_list, member_id_list)
+
+    return book_data, member_data, rent_data
