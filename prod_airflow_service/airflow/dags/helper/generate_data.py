@@ -24,7 +24,7 @@ def generate_member_data(last_id_number):
     
     for i in range(20):
         user_data = {}
-        user_data['id'] = last_id_number + i + 1
+        user_data['id'] = last_id_number + 1 + i
         user_data['name'] = generate_name()
         user_data['age'] = random.randint(15, 35)
         user_data['input_time'] = datetime.now(ZoneInfo('Asia/Jakarta')).strftime('%Y-%m-%d %H:%M:%S')
@@ -72,24 +72,27 @@ def generate_rent_data(last_id_number, book_id_list, member_id_list):
         data['return_date'] = return_day.strftime('%Y-%m-%d %H:%M:%S')
         data['input_time'] = datetime.now(ZoneInfo('Asia/Jakarta')).strftime('%Y-%m-%d %H:%M:%S')
 
+
         rend_data.append(data)
 
     return rend_data
 
-def generate_all_data(book_id_number, member_id_number, rent_id_number, book_id_list=None, member_id_list=None):
-    book_data = generate_book_data(book_id_number)
-    member_data = generate_member_data(member_id_number)
+def generate_all_data(rent_id_list, book_id_list, member_id_list):
+    book_data = generate_book_data(len(book_id_list))
+    member_data = generate_member_data(len(member_id_list))
     
-    if book_id_list is None:
+    if len(book_id_list) == 0:
         book_id_list = []
         for i in book_data:
-            book_id_list.append(i['title'])
+            book_id_list.append(i['id'])
 
-    if member_id_list is None:
+    if len(member_id_list) == 0:
         member_id_list = []
         for i in member_data:
-            member_id_list.append(i['name'])
+            member_id_list.append(i['id'])
 
-    rent_data = generate_rent_data(rent_id_number, book_id_list, member_id_list)
+    print(book_id_list)
+
+    rent_data = generate_rent_data(len(rent_id_list), book_id_list, member_id_list)
 
     return book_data, member_data, rent_data
