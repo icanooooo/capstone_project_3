@@ -125,7 +125,7 @@ def insert_data(book_data, member_data, rent_data, host="application_postgres"):
     insert_rent_data(rent_data, host)
 
 def get_data_id_list(host="application_postgres"):
-    conn = create_connection("localhost", "5432", "application_db", "library_admin", "letsreadbook")
+    conn = create_connection(host, "5432", "application_db", "library_admin", "letsreadbook")
     
     book_query = """
         SELECT DISTINCT(id) from books_table;

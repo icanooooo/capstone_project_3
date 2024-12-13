@@ -56,7 +56,7 @@ def generate_book_data(last_id_number):
 
         return all_books
     
-def generate_rent_data(last_id_number, book_id_list, member_id_list):
+def generate_rent_data(book_id_list, member_id_list, last_id_number):
     rend_data = []
     
     for i in range(10):
@@ -77,7 +77,7 @@ def generate_rent_data(last_id_number, book_id_list, member_id_list):
 
     return rend_data
 
-def generate_all_data(rent_id_list, book_id_list, member_id_list):
+def generate_all_data(book_id_list, member_id_list, rent_id_list):
     book_data = generate_book_data(len(book_id_list))
     member_data = generate_member_data(len(member_id_list))
     
@@ -93,6 +93,6 @@ def generate_all_data(rent_id_list, book_id_list, member_id_list):
 
     print(book_id_list)
 
-    rent_data = generate_rent_data(len(rent_id_list), book_id_list, member_id_list)
+    rent_data = generate_rent_data(book_id_list, member_id_list, len(rent_id_list))
 
     return book_data, member_data, rent_data
