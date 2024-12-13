@@ -28,7 +28,7 @@ def insert_data_to_postges(**kwargs):
     insert_data(result['book_data'], result['member_data'], result['rent_data'])
     
 
-with DAG('generate_table_dag',
+with DAG('generate_data_dag',
          start_date=datetime(2024, 12, 11),
          tags=['app_dag'],
          schedule='@hourly',
