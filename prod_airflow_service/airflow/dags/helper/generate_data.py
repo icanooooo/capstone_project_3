@@ -17,11 +17,11 @@ def generate_name():
         return full_name
     
     else:
-        return "error"
+        return f"error: {response.text}"
 
-def generate_member_data(last_id_number):
+def generate_member_data(last_id_number): #Menerima hanya int
     data = []
-    
+
     for i in range(20):
         user_data = {}
         user_data['id'] = last_id_number + 1 + i
@@ -33,8 +33,8 @@ def generate_member_data(last_id_number):
 
     return data
 
-def generate_book_data(last_id_number):
-    response = requests.get('https://openlibrary.org/subjects/english.json?limit=500')
+def generate_book_data(last_id_number): # Hanya menerima int
+    response = requests.get('https://openlibrary.org/subjects/english.json?limit=200')
 
     if response.status_code == 200:
         all_books = []
@@ -55,6 +55,9 @@ def generate_book_data(last_id_number):
             all_books.append(data)
 
         return all_books
+
+    else:
+        return f"Error: {response.text}"
     
 def generate_rent_data(book_id_list, member_id_list, last_id_number):
     rend_data = []
@@ -65,7 +68,7 @@ def generate_rent_data(book_id_list, member_id_list, last_id_number):
         rent_day = datetime.now(ZoneInfo('Asia/Jakarta')) - timedelta(random.randint(2,4))
         return_day = datetime.now(ZoneInfo('Asia/Jakarta')) + timedelta(random.randint(2,4))
 
-        data['id'] = last_id_number + i + 1
+        data['id'] = len(last_id_number) + i + 1
         data['book_id'] = random.choice(book_id_list)
         data['library_member_id'] = random.choice(member_id_list)
         data['rent_date'] = rent_day.strftime('%Y-%m-%d %H:%M:%S')
