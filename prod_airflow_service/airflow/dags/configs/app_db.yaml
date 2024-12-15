@@ -1,0 +1,18 @@
+postgres:
+  host: "application_postgres"
+  port: 5432
+  database: "application_db"
+  username: "library_admin"
+  password: "letsreadbook"
+
+bigquery:
+  project: "purwadhika"
+  dataset: "ihsan_capstone_project_3"
+
+tables:
+  - source: "books_table"
+    destination: "books_table_bq"
+  - source: "library_member"
+    destination: "member_table_bq"
+  - source: "rent_table"
+    destination: "rent_transactions_bq"
