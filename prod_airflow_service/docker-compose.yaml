@@ -29,6 +29,7 @@ services:
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/dags/helper:/opt/airflow/dags/helper
+      - ./airflow/dags/configs:/opt/airflow/dags/configs
       - ./var/run/docker.sock:/var/run/docker.sock
       - ./keys/credentials.json:/opt/airflow/keys/credentials.json
     env_file:
@@ -51,6 +52,8 @@ services:
       - "host.docker.internal:host-gateway"
     volumes:
       - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/dags/helper:/opt/airflow/dags/helper
+      - ./airflow/dags/configs:/opt/airflow/dags/configs
       - ./var/run/docker.sock:/var/run/docker.sock
       - ./keys/credentials.json:/opt/airflow/keys/credentials.json
     env_file:

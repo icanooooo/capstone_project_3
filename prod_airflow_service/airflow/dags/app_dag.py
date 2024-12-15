@@ -5,20 +5,6 @@ from airflow.utils.task_group import TaskGroup
 from helper.postgres_app_helper import ensure_table, get_data_id_list, insert_data, insert_book_data, insert_member_data, insert_rent_data
 from helper.generate_data import generate_book_data, generate_member_data, generate_rent_data
 
-def insert_data_to_postges(**kwargs):
-    ti = kwargs['ti']
-    result = ti.xcom_pull(task_ids='generate_data')
-
-    for i in result['rent_data']:
-        if isinstance(i['book_id'], int):
-            print(i['book_id'], ' is an integer')
-        else:
-            i['book_id'] = i['book_id'][0]
-            i['library_member_id'] = i['library_member_id'][0]
-
-    print(result)
-    insert_data(result['book_data'], result['member_data'], result['rent_data'])
-
 def generate_id_list():
     ensure_table()
 
@@ -28,9 +14,9 @@ def generate_id_list():
 
 def generate_books(**kwargs):
     ti = kwargs['ti']
-    book_id_list = ti.xcom_pull(task_ids='generate_id')['book_id_list']
+    book_id_list = ti.xcom_pull(task_ids='generate_id')['book_id_list'][0]
 
-    if book_id_list is None:
+    if not book_id_list:
         book_id_list = []
     
     book_data = generate_book_data(len(book_id_list))
@@ -45,9 +31,9 @@ def insert_books(**kwargs):
 
 def generate_member(**kwargs):
     ti = kwargs['ti']
-    member_id_list = ti.xcom_pull(task_ids='generate_id')['member_id_list'] # return dari sini adalah list
+    member_id_list = ti.xcom_pull(task_ids='generate_id')['member_id_list'][0] # return dari sini adalah list
 
-    if member_id_list is None:
+    if not member_id_list:
         member_id_list = []
 
     member_data = generate_member_data(len(member_id_list))
@@ -63,9 +49,9 @@ def insert_member(**kwargs):
 def generate_rent_transaction(**kwargs):
     ti = kwargs['ti']
     all_ids = ti.xcom_pull(task_ids='generate_id')
-    book_id_list = all_ids.get('book_id_list', [])
-    member_id_list = all_ids.get('member_id_list', [])
-    rent_id_list = all_ids.get('member_id_list', [])
+    book_id_list = all_ids['book_id_list'][0]
+    member_id_list = all_ids['member_id_list'][0]
+    rent_id_list = all_ids['rent_id_list'][0]
 
     if not book_id_list:
         book_data = ti.xcom_pull(task_ids='Books.generate_book_data')
@@ -79,12 +65,12 @@ def generate_rent_transaction(**kwargs):
     rent_data = generate_rent_data(book_id_list, member_id_list, rent_id_list)
 
     # ensuring ID's are interger 
-    for i in rent_data:
-        if isinstance(i['book_id'], int) and isinstance(i['library_member_id'], int):
-            print(i['book_id'], ' is an integer')
-        else:
-            i['book_id'] = i['book_id'][0]
-            i['library_member_id'] = i['library_member_id'][0]
+    # for i in rent_data:
+    #     if isinstance(i['book_id'], int) and isinstance(i['library_member_id'], int):
+    #         print(i['book_id'], ' is an integer')
+    #     else:
+    #         i['book_id'] = i['book_id'][0]
+    #         i['library_member_id'] = i['library_member_id'][0]
 
     return rent_data
     

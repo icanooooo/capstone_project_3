@@ -9,6 +9,10 @@ bigquery:
   project: "purwadhika"
   dataset: "ihsan_capstone_project_3"
 
+temp_storage:
+  type: "local"
+  location: "/tmp/data"
+
 tables:
   - source: "books_table"
     destination: "books_table_bq"

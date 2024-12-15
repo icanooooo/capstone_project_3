@@ -68,6 +68,12 @@ def generate_rent_data(book_id_list, member_id_list, last_id_number): # Hanya me
         rent_day = datetime.now(ZoneInfo('Asia/Jakarta')) - timedelta(random.randint(2,4))
         return_day = datetime.now(ZoneInfo('Asia/Jakarta')) + timedelta(random.randint(2,4))
 
+        if isinstance(book_id_list[0], list):
+            book_id_list = [books[0] for books in book_id_list]
+
+        if isinstance(member_id_list[0], list):
+            member_id_list = [member[0] for member in member_id_list]
+
         data['id'] = len(last_id_number) + i + 1
         data['book_id'] = random.choice(book_id_list)
         data['library_member_id'] = random.choice(member_id_list)
