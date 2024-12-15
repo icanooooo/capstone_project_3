@@ -3,16 +3,7 @@ from datetime import datetime
 from airflow.operators.python import PythonOperator
 from airflow.utils.task_group import TaskGroup
 from helper.postgres_app_helper import ensure_table, get_data_id_list, insert_data, insert_book_data, insert_member_data, insert_rent_data
-from helper.generate_data import generate_all_data, generate_book_data, generate_member_data, generate_rent_data
-
-# def generate_data():
-#     ensure_table()
-
-#     rent_result, book_result, member_result = get_data_id_list()
-
-#     book_data, member_data, rent_data = generate_all_data(book_result, member_result, rent_result)
-
-#     return {'book_data': book_data, 'member_data': member_data, 'rent_data': rent_data}
+from helper.generate_data import generate_book_data, generate_member_data, generate_rent_data
 
 def insert_data_to_postges(**kwargs):
     ti = kwargs['ti']
@@ -130,8 +121,3 @@ with DAG('generate_data_dag',
         generateRentData >> insertRentData
 
     generateIdList >> [book_data, member_data] >> rent_data
-
-    # generateData = PythonOperator(task_id='generate_data', python_callable=generate_data)
-    # insert_to_postgres = PythonOperator(task_id='insert_to_postgres', python_callable=insert_data_to_postges)
-
-    # generateData >> insert_to_postgres

@@ -27,7 +27,7 @@ def generate_member_data(last_id_number): #Menerima hanya int
         user_data['id'] = last_id_number + 1 + i
         user_data['name'] = generate_name()
         user_data['age'] = random.randint(15, 35)
-        user_data['input_time'] = datetime.now(ZoneInfo('Asia/Jakarta')).strftime('%Y-%m-%d %H:%M:%S')
+        user_data['created_at'] = datetime.now(ZoneInfo('Asia/Jakarta')).strftime('%Y-%m-%d %H:%M:%S')
     
         data.append(user_data)
 
@@ -50,7 +50,7 @@ def generate_book_data(last_id_number): # Hanya menerima int
             data['genre'] = response_data['subject'][0:3]
             data['release_year'] = response_data['first_publish_year']
             data['stock'] = random.randint(10, 20)
-            data['input_time'] = datetime.now(ZoneInfo('Asia/Jakarta')).strftime('%Y-%m-%d %H:%M:%S')
+            data['created_at'] = datetime.now(ZoneInfo('Asia/Jakarta')).strftime('%Y-%m-%d %H:%M:%S')
 
             all_books.append(data)
 
@@ -73,29 +73,9 @@ def generate_rent_data(book_id_list, member_id_list, last_id_number): # Hanya me
         data['library_member_id'] = random.choice(member_id_list)
         data['rent_date'] = rent_day.strftime('%Y-%m-%d %H:%M:%S')
         data['return_date'] = return_day.strftime('%Y-%m-%d %H:%M:%S')
-        data['input_time'] = datetime.now(ZoneInfo('Asia/Jakarta')).strftime('%Y-%m-%d %H:%M:%S')
+        data['created_at'] = datetime.now(ZoneInfo('Asia/Jakarta')).strftime('%Y-%m-%d %H:%M:%S')
 
 
         rent_data.append(data)
 
     return rent_data
-
-def generate_all_data(book_id_list, member_id_list, rent_id_list):
-    book_data = generate_book_data(len(book_id_list))
-    member_data = generate_member_data(len(member_id_list))
-    
-    if len(book_id_list) == 0:
-        book_id_list = []
-        for i in book_data:
-            book_id_list.append(i['id'])
-
-    if len(member_id_list) == 0:
-        member_id_list = []
-        for i in member_data:
-            member_id_list.append(i['id'])
-
-    print(book_id_list)
-
-    rent_data = generate_rent_data(book_id_list, member_id_list, len(rent_id_list))
-
-    return book_data, member_data, rent_data
