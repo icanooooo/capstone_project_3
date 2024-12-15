@@ -59,8 +59,8 @@ def generate_book_data(last_id_number): # Hanya menerima int
     else:
         return f"Error: {response.text}"
     
-def generate_rent_data(book_id_list, member_id_list, last_id_number):
-    rend_data = []
+def generate_rent_data(book_id_list, member_id_list, last_id_number): # Hanya menerima list
+    rent_data = []
     
     for i in range(10):
         data = {}
@@ -76,9 +76,9 @@ def generate_rent_data(book_id_list, member_id_list, last_id_number):
         data['input_time'] = datetime.now(ZoneInfo('Asia/Jakarta')).strftime('%Y-%m-%d %H:%M:%S')
 
 
-        rend_data.append(data)
+        rent_data.append(data)
 
-    return rend_data
+    return rent_data
 
 def generate_all_data(book_id_list, member_id_list, rent_id_list):
     book_data = generate_book_data(len(book_id_list))
