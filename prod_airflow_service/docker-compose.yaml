@@ -31,7 +31,7 @@ services:
       - ./airflow/dags/helper:/opt/airflow/dags/helper
       - ./airflow/dags/configs:/opt/airflow/dags/configs
       - ./var/run/docker.sock:/var/run/docker.sock
-      - ./keys/credentials.json:/opt/airflow/keys/credentials.json
+      - ./keys/:/opt/airflow/keys/
     env_file:
       - .env
     ports:
@@ -55,7 +55,7 @@ services:
       - ./airflow/dags/helper:/opt/airflow/dags/helper
       - ./airflow/dags/configs:/opt/airflow/dags/configs
       - ./var/run/docker.sock:/var/run/docker.sock
-      - ./keys/credentials.json:/opt/airflow/keys/credentials.json
+      - ./keys/:/opt/airflow/keys/
     env_file:
       - .env
     command: scheduler

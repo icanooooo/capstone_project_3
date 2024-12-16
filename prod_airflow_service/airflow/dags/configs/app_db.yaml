@@ -6,7 +6,7 @@ postgres:
   password: "letsreadbook"
 
 bigquery:
-  project: "purwadhika"
+  project: "icanooo-capstone-project-3"
   dataset: "ihsan_capstone_project_3"
 
 temp_storage:
