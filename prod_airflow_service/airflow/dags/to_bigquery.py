@@ -27,9 +27,11 @@ def ingest_data(source_table, temp_storage):
 def load_data(source_table, temp_storage, project_id, dataset_id, destination):
     client = create_client()
     dataframe = pd.read_csv(f"{temp_storage}/{source_table}.csv")
+    dataframe['created_at'] = pd.to_datetime(dataframe['created_at']) # ini jangan UTC Pastiin
+
     table_id = f"{project_id}.{dataset_id}.{destination}"
 
-    load_bigquery(client, dataframe, table_id, "WRITE APPEND", "created_at")
+    load_bigquery(client, dataframe, table_id, "WRITE_APPEND", "created_at")
 
     print(f"loaded {dataframe.shape[0]} row to {destination}")
 

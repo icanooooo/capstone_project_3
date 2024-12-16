@@ -56,9 +56,10 @@ def create_table(client, table_id, schema, partition_col=None):
 
         client.create_table(table)
         print("Loaded table to bigQuery! ")
-    except:
+    except Exception as e:
+        print(f"Error: {e}")
         client.get_table(table_id)
-        print(f"Table `{table_id}` already exist")
+
 
 
 # Loading data to bigQuery
