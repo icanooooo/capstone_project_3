@@ -87,3 +87,45 @@ def drop_table(client, table_id):
     client.delete_table(table_id, not_found_ok=True)
 
     print(f"Deleted table `{table_id}`.")
+
+def get_last_updated(client, table_id):
+    query = f"""
+        SELECT MAX(created_at) AS last_updated
+        FROM `{table_id}`
+    """
+
+    query_job = client.query(query)
+    result = query_job.result()
+
+    last_updated_timestamp = None
+    for row in result:
+        last_updated_timestamp = row['last_updated']
+
+    if not last_updated_timestamp:
+        last_updated_timestamp = "1970-01-01 00:00:00" # for firsttime ingestion
+
+    return last_updated_timestamp
+
+def incremental_load(client, dataframe, table_id, mode, partition_field=None):
+    # Akan print table already exist jika ada
+    create_table(client, table_id, create_schema(dataframe), partition_field)
+
+    last_updated_timestamp = get_last_updated(client, table_id)
+
+    incremental_df = dataframe[dataframe['created_at'] > last_updated_timestamp]
+
+    job_config = bigquery.LoadJobConfig(
+        schema = create_schema(incremental_df),
+        write_disposition=mode,
+    )
+
+    if partition_field:
+        job_config.time_partitioning = bigquery.TimePartitioning(
+            field=partition_field
+        )
+
+    job = client.load_table_from_dataframe(
+        incremental_df, table_id, job_config=job_config
+    )
+    job.result()
+

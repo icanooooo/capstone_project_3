@@ -6,7 +6,7 @@ postgres:
   password: "letsreadbook"
 
 bigquery:
-  project: "icanooo-capstone-project-3"
+  project: "purwadika"
   dataset: "ihsan_capstone_project_3"
 
 temp_storage:
@@ -15,8 +15,11 @@ temp_storage:
 
 tables:
   - source: "books_table"
+    staging_table: "books_table_stg"
     destination: "books_table_bq"
   - source: "library_member"
+    staging_table: "member_table_stg"
     destination: "member_table_bq"
   - source: "rent_table"
+    staging_table: "rent_table_stg"
     destination: "rent_transactions_bq"

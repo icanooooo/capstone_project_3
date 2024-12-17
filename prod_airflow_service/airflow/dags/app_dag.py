@@ -64,14 +64,6 @@ def generate_rent_transaction(**kwargs):
 
     rent_data = generate_rent_data(book_id_list, member_id_list, rent_id_list)
 
-    # ensuring ID's are interger 
-    # for i in rent_data:
-    #     if isinstance(i['book_id'], int) and isinstance(i['library_member_id'], int):
-    #         print(i['book_id'], ' is an integer')
-    #     else:
-    #         i['book_id'] = i['book_id'][0]
-    #         i['library_member_id'] = i['library_member_id'][0]
-
     return rent_data
     
 def insert_rent_transaction(**kwargs):

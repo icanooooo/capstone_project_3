@@ -1,6 +1,6 @@
 from airflow import DAG
 from helper.postgres_app_helper import create_connection, print_query
-from helper.bigquery_helper import create_client, load_bigquery
+from helper.bigquery_helper import create_client, load_bigquery, incremental_load
 from airflow.utils.task_group import TaskGroup
 from airflow.operators.python import PythonOperator
 from datetime import datetime
@@ -8,6 +8,7 @@ from datetime import datetime
 import pandas as pd
 import yaml
 import os
+import pytz
 
 def load_config():
     with open("/opt/airflow/dags/configs/app_db.yaml", "r") as file:
@@ -28,10 +29,12 @@ def load_data(source_table, temp_storage, project_id, dataset_id, destination):
     client = create_client()
     dataframe = pd.read_csv(f"{temp_storage}/{source_table}.csv")
     dataframe['created_at'] = pd.to_datetime(dataframe['created_at']) # ini jangan UTC Pastiin
+    dataframe['created_at'] = dataframe['created_at'].dt.tz_localize('UTC')
+    dataframe['created_at'] = dataframe['created_at'].dt.tz_convert('Asia/Jakarta')
 
     table_id = f"{project_id}.{dataset_id}.{destination}"
 
-    load_bigquery(client, dataframe, table_id, "WRITE_APPEND", "created_at")
+    incremental_load(client, dataframe, table_id, "WRITE_APPEND", "created_at")
 
     print(f"loaded {dataframe.shape[0]} row to {destination}")
 
@@ -52,7 +55,8 @@ def create_dag():
 
         for table in config["tables"]:
             source_table = table["source"]
-            destination_table = table["destination"]
+            staging_table = table["staging_table"]
+            destination_bq = table["destination"]
 
             with TaskGroup(f"load_{source_table}", tooltip=f"load {source_table} tasks") as table_group:
                 ingest_task=PythonOperator(
@@ -72,7 +76,7 @@ def create_dag():
                         "temp_storage": temp_storage,
                         "project_id": project_id,
                         "dataset_id": dataset_id,
-                        "destination": destination_table
+                        "destination": destination_bq
                     }
                 )
 
