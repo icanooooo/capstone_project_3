@@ -1,6 +1,6 @@
 from airflow import DAG
 from helper.postgres_app_helper import create_connection, print_query
-from helper.bigquery_helper import create_client, load_bigquery, incremental_load
+from helper.bigquery_helper import create_client, upsert_data, incremental_load
 from airflow.utils.task_group import TaskGroup
 from airflow.operators.python import PythonOperator
 from datetime import datetime
@@ -25,7 +25,7 @@ def ingest_data(source_table, temp_storage):
     temp_file_path = os.path.join(temp_storage, f"{source_table}.csv")
     df.to_csv(temp_file_path, index=False)
 
-def load_data(source_table, temp_storage, project_id, dataset_id, destination):
+def load_stg_table(source_table, temp_storage, project_id, dataset_id, destination):
     client = create_client()
     dataframe = pd.read_csv(f"{temp_storage}/{source_table}.csv")
     dataframe['created_at'] = pd.to_datetime(dataframe['created_at']) # ini jangan UTC Pastiin
@@ -38,6 +38,18 @@ def load_data(source_table, temp_storage, project_id, dataset_id, destination):
 
     print(f"loaded {dataframe.shape[0]} row to {destination}")
 
+def upsert_table(temp_storage, source_table, project_id, dataset_id, stage_id, destination_id):
+    client = create_client()
+
+    dataframe = pd.read_csv(f"{temp_storage}/{source_table}.csv")
+    dataframe['created_at'] = pd.to_datetime(dataframe['created_at']) # ini jangan UTC Pastiin
+    dataframe['created_at'] = dataframe['created_at'].dt.tz_localize('UTC')
+    dataframe['created_at'] = dataframe['created_at'].dt.tz_convert('Asia/Jakarta')
+    
+    stage_table = f"{project_id}.{dataset_id}.{stage_id}"
+    dest_table = f"{project_id}.{dataset_id}.{destination_id}"
+
+    upsert_data(client, stage_table, dest_table, "id", dataframe, "created_at")
 
 def create_dag():
     config=load_config()
@@ -68,19 +80,32 @@ def create_dag():
                     },
                 )
 
-                insert_to_bq=PythonOperator(
-                    task_id=f"loading_{source_table}",
-                    python_callable=load_data,
+                insert_stg_bq=PythonOperator(
+                    task_id=f"stg_table_{destination_bq}",
+                    python_callable=load_stg_table,
                     op_kwargs={
                         "source_table": source_table,
                         "temp_storage": temp_storage,
                         "project_id": project_id,
                         "dataset_id": dataset_id,
-                        "destination": destination_bq
+                        "destination": staging_table
                     }
                 )
 
-                ingest_task >> insert_to_bq
+                upsert_to_bq=PythonOperator(
+                    task_id=f"upsert_{destination_bq}",
+                    python_callable=upsert_table,
+                    op_kwargs={
+                        "temp_storage": temp_storage,
+                        "source_table": source_table,
+                        "project_id": project_id,
+                        "dataset_id": dataset_id,
+                        "stage_id": staging_table,
+                        "destination_id": destination_bq
+                    }
+                )
+
+                ingest_task >> insert_stg_bq >> upsert_to_bq
     
     return dag
 

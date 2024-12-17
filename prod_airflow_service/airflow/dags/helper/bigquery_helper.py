@@ -129,3 +129,38 @@ def incremental_load(client, dataframe, table_id, mode, partition_field=None):
     )
     job.result()
 
+def get_schema(client, table_id):
+    table = client.get_table(table_id)
+    schema = [field.name for field in table.schema]
+
+    return schema
+
+def upsert_data(client, stage_id, table_id, unique_key, dataframe, partition_field):
+    try:
+        create_table(client, table_id, create_schema(dataframe), partition_field)
+    except:
+        print("table already exist")
+
+    columns = get_schema(client, table_id)
+    columns.remove(unique_key)
+
+    update_set = ", ".join([f"prod.{col} = stage.{col}" for col in columns])
+    
+    insert_columns = ", ".join([unique_key] + columns)
+    insert_values = ", ".join([f"stage.{col}" for col in [unique_key] + columns])
+
+    merge_query = f"""
+    MERGE `{table_id}` prod
+    USING `{stage_id}` stage
+    ON prod.{unique_key} = stage.{unique_key}
+    WHEN MATCHED THEN
+        UPDATE SET {update_set}
+    WHEN NOT MATCHED THEN
+        INSERT ({insert_columns})
+        VALUES ({insert_values})
+"""
+
+    print(f"Merging with {stage_id} with {table_id}...")
+    query_job = client.query(merge_query)
+    query_job.result()
+    print("Merge succesful!")
