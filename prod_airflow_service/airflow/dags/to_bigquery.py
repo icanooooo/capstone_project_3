@@ -10,6 +10,8 @@ import yaml
 import os
 import pytz
 
+# def ensure_dataset jangan lupa
+
 def load_config():
     with open("/opt/airflow/dags/configs/app_db.yaml", "r") as file:
         return yaml.safe_load(file)
@@ -44,7 +46,7 @@ def upsert_table(temp_storage, source_table, project_id, dataset_id, stage_id, d
     dataframe = pd.read_csv(f"{temp_storage}/{source_table}.csv")
     dataframe['created_at'] = pd.to_datetime(dataframe['created_at']) # ini jangan UTC Pastiin
     dataframe['created_at'] = dataframe['created_at'].dt.tz_localize('UTC')
-    dataframe['created_at'] = dataframe['created_at'].dt.tz_convert('Asia/Jakarta')
+    dataframe['created_at'] = dataframe['created_at'].dt.tz_convert('Asia/Jakarta') # Masih UTC di bigquery
     
     stage_table = f"{project_id}.{dataset_id}.{stage_id}"
     dest_table = f"{project_id}.{dataset_id}.{destination_id}"
