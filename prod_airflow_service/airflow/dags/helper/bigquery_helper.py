@@ -29,7 +29,7 @@ def create_schema(dataframe):
         elif pd.api.types.is_float_dtype(dtype):
             field_type = "FLOAT64"
         elif pd.api.types.is_datetime64_any_dtype(dtype):
-            field_type = "TIMESTAMP"         
+            field_type = "DATETIME"         
 
         mode = "REQUIRED" if dataframe[col].notna().all() else "NULLABLE"
 

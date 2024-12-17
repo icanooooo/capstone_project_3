@@ -31,8 +31,8 @@ def load_stg_table(source_table, temp_storage, project_id, dataset_id, destinati
     client = create_client()
     dataframe = pd.read_csv(f"{temp_storage}/{source_table}.csv")
     dataframe['created_at'] = pd.to_datetime(dataframe['created_at']) # ini jangan UTC Pastiin
-    dataframe['created_at'] = dataframe['created_at'].dt.tz_localize('UTC')
-    dataframe['created_at'] = dataframe['created_at'].dt.tz_convert('Asia/Jakarta')
+    dataframe['created_at'] = dataframe['created_at'].dt.tz_localize(None) 
+
 
     table_id = f"{project_id}.{dataset_id}.{destination}"
 
@@ -45,8 +45,7 @@ def upsert_table(temp_storage, source_table, project_id, dataset_id, stage_id, d
 
     dataframe = pd.read_csv(f"{temp_storage}/{source_table}.csv")
     dataframe['created_at'] = pd.to_datetime(dataframe['created_at']) # ini jangan UTC Pastiin
-    dataframe['created_at'] = dataframe['created_at'].dt.tz_localize('UTC')
-    dataframe['created_at'] = dataframe['created_at'].dt.tz_convert('Asia/Jakarta') # Masih UTC di bigquery
+    dataframe['created_at'] = dataframe['created_at'].dt.tz_localize(None) 
     
     stage_table = f"{project_id}.{dataset_id}.{stage_id}"
     dest_table = f"{project_id}.{dataset_id}.{destination_id}"
