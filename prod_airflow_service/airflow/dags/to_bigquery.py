@@ -75,7 +75,7 @@ def create_dag():
         catchup=False) as dag:
 
         ensure_dataset_task = PythonOperator(
-            task_id=f"check_dataset",
+            task_id=f"ensure_dataset",
             python_callable=ensure_dataset_exist,
             op_kwargs={
                 "project_id": project_id,

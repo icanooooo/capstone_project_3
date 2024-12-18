@@ -14,7 +14,7 @@ def generate_id_list():
 
 def generate_books(**kwargs):
     ti = kwargs['ti']
-    book_id_list = ti.xcom_pull(task_ids='generate_id')['book_id_list'][0]
+    book_id_list = ti.xcom_pull(task_ids='get_id_list')['book_id_list'][0]
 
     if not book_id_list:
         book_id_list = []
@@ -31,7 +31,7 @@ def insert_books(**kwargs):
 
 def generate_member(**kwargs):
     ti = kwargs['ti']
-    member_id_list = ti.xcom_pull(task_ids='generate_id')['member_id_list'][0] # return dari sini adalah list
+    member_id_list = ti.xcom_pull(task_ids='get_id_list')['member_id_list'][0] # return dari sini adalah list
 
     if not member_id_list:
         member_id_list = []
@@ -48,7 +48,7 @@ def insert_member(**kwargs):
 
 def generate_rent_transaction(**kwargs):
     ti = kwargs['ti']
-    all_ids = ti.xcom_pull(task_ids='generate_id')
+    all_ids = ti.xcom_pull(task_ids='get_id_list')
     book_id_list = all_ids['book_id_list'][0]
     member_id_list = all_ids['member_id_list'][0]
     rent_id_list = all_ids['rent_id_list'][0]
@@ -78,7 +78,7 @@ with DAG('generate_data_dag',
          schedule='@once',
          catchup=False) as dag:
 
-    generateIdList = PythonOperator(task_id='generate_id', python_callable=generate_id_list)
+    generateIdList = PythonOperator(task_id='get_id_list', python_callable=generate_id_list)
 
     with TaskGroup("Books") as book_data:
         generateBookData = PythonOperator(task_id='generate_book_data', python_callable=generate_books)
