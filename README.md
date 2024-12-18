@@ -42,7 +42,7 @@ Cara untuk menggenerate data tersebut adalah dengan menggunakan API random name 
 
 Masing-masing tabel memiliki *primary key* masing-masing yang menjadi *foreign key* didalam table *rent_table*. *primary key* juga berurutan, memudahkan kita untuk menggunakan *primary key* terakhir untuk menggenerasi *primary key* selanjutnya.
 
-<img src='assets/generate_data_dag.png' alt='generate_data_dag' width='50%'>
+<img src='assets/generate_data_dag.png' alt='generate_data_dag' width='75%'>
 
 Dari gambar diatas, kita dapat melihat bahwa sebelum kita generate data kita akan mengambil id list dari masing-masing tabel di PostgreSQL (akan menjadi 0 pada generate pertama), hal ini dilakukan untu memastikan tidak ada id yang sama pada generate data dengan data sebelumnya.
 
@@ -52,6 +52,6 @@ setelah semua data di generate, kita akan masing-masing insert datanya kedalam P
 
 ### (2) PostgreSQL to BigQuery
 
-<img src='assets/postgres_to_bigquery_dag.png' alt='postgres_to_bigquery_dag' width='50%'>
+<img src='assets/postgres_to_bigquery_dag.png' alt='postgres_to_bigquery_dag' width='75%'>
 
 *to be added soon...*
