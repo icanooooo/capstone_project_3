@@ -15,19 +15,15 @@ def load_config():
     with open("/opt/airflow/dags/configs/app_db.yaml", "r") as file:
         return yaml.safe_load(file)
 
-def check_dataset_exist(project_id, dataset_id):
+def ensure_dataset_exist(project_id, dataset_id):
     result = check_dataset(project_id, dataset_id)
 
     if result:
         raise AirflowSkipException(f"{dataset_id} already exist")
     else:
-        print(f"dataset does not exist proceed in creating dataset")
-        return "create_dataset"
+        print(f"dataset does not exist, proceed in creating dataset")
+        create_dataset(project_id, dataset_id)  
 
-def creating_dataset(project_id, dataset_id):
-    create_dataset(project_id, dataset_id)
-
-   
 def ingest_data(source_table, temp_storage):
     conn = create_connection("application_postgres", "5432", "application_db", "library_admin", "letsreadbook")
 
@@ -78,18 +74,9 @@ def create_dag():
         schedule_interval='@once',
         catchup=False) as dag:
 
-        check_dataset_task = PythonOperator(
+        ensure_dataset_task = PythonOperator(
             task_id=f"check_dataset",
-            python_callable=check_dataset_exist,
-            op_kwargs={
-                "project_id": project_id,
-                "dataset_id": dataset_id,
-            },
-        )
-
-        create_dataset_task = PythonOperator(
-            task_id=f"create_dataset",
-            python_callable=creating_dataset,
+            python_callable=ensure_dataset_exist,
             op_kwargs={
                 "project_id": project_id,
                 "dataset_id": dataset_id,
@@ -143,8 +130,7 @@ def create_dag():
 
             grouped_task.append(table_group)
 
-        check_dataset_task >> create_dataset_task
-        create_dataset_task >> [task for task in grouped_task]
+        ensure_dataset_task >> [task for task in grouped_task]
     
     return dag
 
