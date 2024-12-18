@@ -2,8 +2,8 @@ from airflow import DAG
 from helper.postgres_app_helper import create_connection, print_query
 from helper.bigquery_helper import create_client, upsert_data, incremental_load, check_dataset, create_dataset
 from airflow.utils.task_group import TaskGroup
-from airflow.operators.python import PythonOperator, BranchPythonOperator
-from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.python import PythonOperator
+from airflow.exceptions import AirflowSkipException
 from datetime import datetime
 
 import pandas as pd
@@ -19,7 +19,7 @@ def check_dataset_exist(project_id, dataset_id):
     result = check_dataset(project_id, dataset_id)
 
     if result:
-        return "skip_creating_dataset"
+        raise AirflowSkipException(f"{dataset_id} already exist")
     else:
         print(f"dataset does not exist proceed in creating dataset")
         return "create_dataset"
@@ -78,7 +78,7 @@ def create_dag():
         schedule_interval='@once',
         catchup=False) as dag:
 
-        check_dataset_task = BranchPythonOperator(
+        check_dataset_task = PythonOperator(
             task_id=f"check_dataset",
             python_callable=check_dataset_exist,
             op_kwargs={
@@ -95,8 +95,6 @@ def create_dag():
                 "dataset_id": dataset_id,
             },
         )
-
-        skip_create_dataset = DummyOperator(task_id="skip_creating_dataset")
 
         grouped_task = []
 
@@ -145,9 +143,8 @@ def create_dag():
 
             grouped_task.append(table_group)
 
-        check_dataset_task >> [create_dataset_task, skip_create_dataset]
+        check_dataset_task >> create_dataset_task
         create_dataset_task >> [task for task in grouped_task]
-        skip_create_dataset >> [task for task in grouped_task]
     
     return dag
 
