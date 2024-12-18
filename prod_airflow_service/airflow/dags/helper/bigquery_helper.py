@@ -1,4 +1,6 @@
 from google.cloud import bigquery
+from google.api_core.exceptions import NotFound
+
 from google.auth import default
 import pandas as pd
 
@@ -60,6 +62,25 @@ def create_table(client, table_id, schema, partition_col=None):
         print(f"Error: {e}")
         client.get_table(table_id)
 
+def check_dataset(project_id, dataset_id):
+    client = create_client()
+
+    try:
+        client.get_dataset(f"{project_id}.{dataset_id}")
+        return True
+    except NotFound:
+        return False
+    except Exception as e:
+        raise e
+
+
+def create_dataset(project_id, dataset_id):
+    client = create_client()
+
+    dataset_address = bigquery.Dataset(f"{project_id}.{dataset_id}")
+    dataset_address.location = "asia-southeast2"
+    dataset = client.create_dataset(dataset_address)
+    print("created_dataset")
 
 
 # Loading data to bigQuery

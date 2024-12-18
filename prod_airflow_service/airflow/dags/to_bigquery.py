@@ -1,8 +1,9 @@
 from airflow import DAG
 from helper.postgres_app_helper import create_connection, print_query
-from helper.bigquery_helper import create_client, upsert_data, incremental_load
+from helper.bigquery_helper import create_client, upsert_data, incremental_load, check_dataset, create_dataset
 from airflow.utils.task_group import TaskGroup
-from airflow.operators.python import PythonOperator
+from airflow.operators.python import PythonOperator, BranchPythonOperator
+from airflow.operators.dummy_operator import DummyOperator
 from datetime import datetime
 
 import pandas as pd
@@ -10,16 +11,27 @@ import yaml
 import os
 import pytz
 
-# def ensure_dataset jangan lupa
-
 def load_config():
     with open("/opt/airflow/dags/configs/app_db.yaml", "r") as file:
         return yaml.safe_load(file)
-    
+
+def check_dataset_exist(project_id, dataset_id):
+    result = check_dataset(project_id, dataset_id)
+
+    if result:
+        return "skip_creating_dataset"
+    else:
+        print(f"dataset does not exist proceed in creating dataset")
+        return "create_dataset"
+
+def creating_dataset(project_id, dataset_id):
+    create_dataset(project_id, dataset_id)
+
+   
 def ingest_data(source_table, temp_storage):
     conn = create_connection("application_postgres", "5432", "application_db", "library_admin", "letsreadbook")
 
-    result, columns = print_query(conn, f"SELECT * FROM {source_table}")
+    result, columns = print_query(conn, f"SELECT * FROM {source_table}") # Jangan lupa untuk where h-1
 
     df = pd.DataFrame(result, columns=columns)
     print(df)
@@ -66,6 +78,28 @@ def create_dag():
         schedule_interval='@once',
         catchup=False) as dag:
 
+        check_dataset_task = BranchPythonOperator(
+            task_id=f"check_dataset",
+            python_callable=check_dataset_exist,
+            op_kwargs={
+                "project_id": project_id,
+                "dataset_id": dataset_id,
+            },
+        )
+
+        create_dataset_task = PythonOperator(
+            task_id=f"create_dataset",
+            python_callable=creating_dataset,
+            op_kwargs={
+                "project_id": project_id,
+                "dataset_id": dataset_id,
+            },
+        )
+
+        skip_create_dataset = DummyOperator(task_id="skip_creating_dataset")
+
+        grouped_task = []
+
         for table in config["tables"]:
             source_table = table["source"]
             staging_table = table["staging_table"]
@@ -79,6 +113,7 @@ def create_dag():
                         "source_table": source_table,
                         "temp_storage": temp_storage,
                     },
+                    trigger_rule="none_failed"
                 )
 
                 insert_stg_bq=PythonOperator(
@@ -107,6 +142,12 @@ def create_dag():
                 )
 
                 ingest_task >> insert_stg_bq >> upsert_to_bq
+
+            grouped_task.append(table_group)
+
+        check_dataset_task >> [create_dataset_task, skip_create_dataset]
+        create_dataset_task >> [task for task in grouped_task]
+        skip_create_dataset >> [task for task in grouped_task]
     
     return dag
 
