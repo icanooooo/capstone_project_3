@@ -36,13 +36,13 @@ Setelah itu kita bisa membuka webserver airflow di browser dengan membuka `local
 
 Dalam DAG pertama kita, kita diminta untuk generate database dengan schema seperti:
 
-<img src='assets/database_design.png' alt='project graph' width='75%'>
+<img src='assets/database_design.png' alt='database design' width='50%'>
 
 Cara untuk menggenerate data tersebut adalah dengan menggunakan API random name generator untuk nama member dan OpenLibrary untuk Judul Buku.
 
 Masing-masing tabel memiliki *primary key* masing-masing yang menjadi *foreign key* didalam table *rent_table*. *primary key* juga berurutan, memudahkan kita untuk menggunakan *primary key* terakhir untuk menggenerasi *primary key* selanjutnya.
 
-*gambar DAG*
+<img src='assets/generate_data_dag.png' alt='generate_data_dag' width='50%'>
 
 Dari gambar diatas, kita dapat melihat bahwa sebelum kita generate data kita akan mengambil id list dari masing-masing tabel di PostgreSQL (akan menjadi 0 pada generate pertama), hal ini dilakukan untu memastikan tidak ada id yang sama pada generate data dengan data sebelumnya.
 
@@ -51,5 +51,7 @@ Lalu setelah itu kita menjalankan secara bersamaan generate data pada tabel `boo
 setelah semua data di generate, kita akan masing-masing insert datanya kedalam PostgreSQL dengan menggunakan *library* psycopg2 melalui helper file `postgres_app_helper`.
 
 ### (2) PostgreSQL to BigQuery
+
+<img src='assets/postgres_to_bigquery_dag.png' alt='postgres_to_bigquery_dag' width='50%'>
 
 *to be added soon...*
