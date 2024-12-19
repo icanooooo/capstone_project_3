@@ -73,9 +73,9 @@ def insert_rent_transaction(**kwargs):
     insert_rent_data(rent_data)
 
 with DAG('generate_data_dag',
-         start_date=datetime(2024, 12, 14),
+         start_date=datetime(2024, 12, 19),
          tags=['app_dag'],
-         schedule='@once',
+         schedule_interval='15 * * * *', # Dilakukan setiap jam di menit ke 15 (01.15, 02.15, seterusnya..)
          catchup=False) as dag:
 
     generateIdList = PythonOperator(task_id='get_id_list', python_callable=generate_id_list)
