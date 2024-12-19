@@ -56,7 +56,7 @@ Dalam DAG ini, kita diminta untuk melakukan ingestion dari data yang telah kita 
 
 <img src='assets/postgres_to_bigquery_dag.png' alt='postgres_to_bigquery_dag' width='80%'>
 
-Proses dari DAG ini didahulukan dengan menggunakan task *ensure_dataset* yang akan mengecek apakah dataset sudah tersedia pada BigQuery target. Bila tidak ada, maka task akan menjalankan pembuatan dataset. Bila ada, maka task akan di skip.
+Proses dari DAG ini didahulukan dengan menggunakan task `check_dataset` yang akan mememeriksa apakah dataset sudah tersedia pada BigQuery target. Tergantung hasil return dari *check_dataset*, jika `True` maka `create_dataset` task akan menjalankan pembuatan dataset. Bila hasil return `False` , maka task `create_dataset` akan di skip sebagaimana graph diatas.
 
 Karena task sebelumnya di skip, kita harus memastikan `trigger_rule` untuk task selanjutnya. Karena secara *default* `trigger_rule` yang digunakan adalah `all_success`, yang memastikan bahwa task sebelumnya harus berhasil berjalan, kita akan mengubah value `trigger_rule` dalam task selanjutanya menjadi `none_failed`.
 
