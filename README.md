@@ -26,7 +26,7 @@ Setelah itu kita bisa membuka webserver airflow di browser dengan membuka `local
 
 <img src='assets/dag_button.png' alt='database design' width='35%'>
 
-jika ingin memberhentika service kita berikan command:
+jika ingin memberhentikan service kita berikan command:
 
 ```
 docker compose -f prod_airflow_service/docker-compose.yaml down
