@@ -56,9 +56,11 @@ Dalam DAG ini, kita diminta untuk melakukan ingestion dari data yang telah kita 
 
 <img src='assets/postgres_to_bigquery_dag.png' alt='postgres_to_bigquery_dag' width='80%'>
 
-Proses dari DAG ini didahulukan dengan menggunakan task *ensure_dataset* yang akan mengecek apakah dataset sudah tersedia pada BigQuery target. Bila tidak ada, maka task akan menjalankan pembuatan dataset. 
+Proses dari DAG ini didahulukan dengan menggunakan task *ensure_dataset* yang akan mengecek apakah dataset sudah tersedia pada BigQuery target. Bila tidak ada, maka task akan menjalankan pembuatan dataset. Bila ada, maka task akan di skip.
 
-Dalam membuat DAG ini, ketika menggunakan yaml file sebagai configuration file yang menyimpan detail informasi configuration tabel kita. Penggunaan file yaml membantu karena ini dapat digunakan untuk *dynamic dag*, menggunakan 1 task group sebagai template untuk beberapa table.
+Karena task sebelumnya di skip, kita harus memastikan `trigger_rule` untuk task selanjutnya. Karena secara *default* `trigger_rule` yang digunakan adalah `all_success`, yang memastikan bahwa task sebelumnya harus berhasil berjalan, kita akan mengubah value `trigger_rule` dalam task selanjutanya menjadi `none_failed`.
+
+Dalam membuat DAG ini, kita menggunakan yaml file sebagai configuration file untuk menyimpan detail informasi tabel kita. Penggunaan file yaml membantu karena ini dapat digunakan untuk *dynamic dag*, menggunakan 1 task group sebagai template untuk beberapa table.
 
 Seperti yang kita lihat diatas setiap table diproses dengan template task yang sama. (1) kita melakukan ingestion dari PostgreSQL dengan library pandas dan menyimpannya sebagai csv dalam temporary storage kita, (2) kita melakukan load staging table dengan menggunakan Google Cloud Python API secara incremental, dan (3) kita melakukan upsert ke final table kita secara incremental.
 
