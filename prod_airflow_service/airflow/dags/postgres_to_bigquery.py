@@ -1,6 +1,7 @@
 from airflow import DAG
 from helper.postgres_app_helper import create_connection, print_query
 from helper.bigquery_helper import create_client, upsert_data, incremental_load, check_dataset, create_dataset
+from helper.pandas_helper import automatically_change_dtypes
 from airflow.utils.task_group import TaskGroup
 from airflow.operators.python import PythonOperator
 from airflow.exceptions import AirflowSkipException
@@ -40,10 +41,9 @@ def creating_dataset(project_id, dataset_id, **kwargs):
 def ingest_data(source_table, temp_storage):
     conn = create_connection("application_postgres", "5432", "application_db", "library_admin", "letsreadbook")
 
-    result, columns = print_query(conn, f"SELECT * FROM {source_table}") # Jangan lupa untuk where h-1
+    result, columns = print_query(conn, f"SELECT * FROM {source_table} WHERE created_at = CURRENT_DATE - INTERVAL '1 day';") # Jangan lupa untuk where h-1
 
     df = pd.DataFrame(result, columns=columns)
-    print(df)
 
     temp_file_path = os.path.join(temp_storage, f"{source_table}.csv")
     df.to_csv(temp_file_path, index=False)
@@ -54,6 +54,7 @@ def load_stg_table(source_table, temp_storage, project_id, dataset_id, destinati
     dataframe['created_at'] = pd.to_datetime(dataframe['created_at']) # ini jangan UTC Pastiin
     dataframe['created_at'] = dataframe['created_at'].dt.tz_localize(None) 
 
+    dataframe = automatically_change_dtypes(dataframe)
 
     table_id = f"{project_id}.{dataset_id}.{destination}"
 
@@ -66,8 +67,10 @@ def upsert_table(temp_storage, source_table, project_id, dataset_id, stage_id, d
 
     dataframe = pd.read_csv(f"{temp_storage}/{source_table}.csv")
     dataframe['created_at'] = pd.to_datetime(dataframe['created_at']) # ini jangan UTC Pastiin
-    dataframe['created_at'] = dataframe['created_at'].dt.tz_localize(None) 
-    
+    dataframe['created_at'] = dataframe['created_at'].dt.tz_localize(None)
+
+    dataframe = automatically_change_dtypes(dataframe)
+
     stage_table = f"{project_id}.{dataset_id}.{stage_id}"
     dest_table = f"{project_id}.{dataset_id}.{destination_id}"
 
@@ -83,7 +86,7 @@ def create_dag():
 
     with DAG(
         "library_postgres_db_to_bigquery",
-        start_date=datetime(2024, 12, 19),
+        start_date=datetime(2024, 12, 20),
         tags=['bigquery_dags'],
         schedule_interval='15 * * * *', # setiap jam dalam menit ke 15 (01.15, 02.15, seterusnya..)
         catchup=False) as dag:
