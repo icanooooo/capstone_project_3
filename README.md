@@ -42,7 +42,7 @@ Cara untuk menggenerate data tersebut adalah dengan menggunakan API random name 
 
 Masing-masing tabel memiliki *primary key* masing-masing yang menjadi *foreign key* didalam table *rent_table*. *primary key* juga berurutan, memudahkan kita untuk menggunakan *primary key* terakhir untuk menggenerasi *primary key* selanjutnya.
 
-<img src='assets/generate_data_dag.png' alt='generate_data_dag' width='75%'>
+<img src='assets/generate_data_dag.png' alt='generate_data_dag' width='90%'>
 
 Dari gambar diatas, kita dapat melihat bahwa sebelum kita generate data kita akan mengambil id list dari masing-masing tabel di PostgreSQL (akan menjadi 0 pada generate pertama), hal ini dilakukan untu memastikan tidak ada id yang sama pada generate data dengan data sebelumnya.
 
@@ -52,6 +52,14 @@ setelah semua data di generate, kita akan masing-masing insert datanya kedalam P
 
 ### (2) PostgreSQL to BigQuery
 
-<img src='assets/postgres_to_bigquery_dag.png' alt='postgres_to_bigquery_dag' width='75%'>
+Dalam DAG ini, kita diminta untuk melakukan ingestion dari data yang telah kita generate sebelumnya dan kita simpan di database PostgreSQL ke Google BigQuery.
 
-*to be added soon...*
+<img src='assets/postgres_to_bigquery_dag.png' alt='postgres_to_bigquery_dag' width='80%'>
+
+Proses dari DAG ini didahulukan dengan menggunakan task *ensure_dataset* yang akan mengecek apakah dataset sudah tersedia pada BigQuery target. Bila tidak ada, maka task akan menjalankan pembuatan dataset. 
+
+Dalam membuat DAG ini, ketika menggunakan yaml file sebagai configuration file yang menyimpan detail informasi configuration tabel kita. Penggunaan file yaml membantu karena ini dapat digunakan untuk *dynamic dag*, menggunakan 1 task group sebagai template untuk beberapa table.
+
+Seperti yang kita lihat diatas setiap table diproses dengan template task yang sama. (1) kita melakukan ingestion dari PostgreSQL dengan library pandas dan menyimpannya sebagai csv dalam temporary storage kita, (2) kita melakukan load staging table dengan menggunakan Google Cloud Python API secara incremental, dan (3) kita melakukan upsert ke final table kita secara incremental.
+
+Penggunaan staging table dengan final/production table membantu untuk memastikan bahwa final table sudah siap digunakan dan segala pemrosesan yang belum selesai dilakukan di staging table.
