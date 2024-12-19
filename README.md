@@ -1,6 +1,6 @@
 # Capstone Project 3
 
-Repositori ini adalah hasil kerja saya untuk tugas Capstone Project ke-3 untuk Kelas Data Engineering Purwadhika. Secara garis besar saya diminta untuk membuat suatu pipeline yang mengutilisasi Airflow sebagai *orchestrator* dua DAG (Directed Acyiclic Graph) yang bertujuan untuk (1) Generasi *dummy data* dan menyimpannya dalam suatu database (PostgreSQL) dan (2) melakukan ingestion data tersebut dari database ke Google BigQuery, suatu cloud-based data warehouse. Graph dibawah dapat dilihat sebagai gambaran umum project ini.
+Repository ini adalah hasil kerja saya untuk tugas Capstone Project ke-3 untuk Kelas Data Engineering Purwadhika. Secara garis besar saya diminta untuk membuat suatu pipeline yang mengutilisasi Airflow sebagai *orchestrator* dua DAG (Directed Acyiclic Graph) yang bertujuan untuk (1) Generasi *dummy data* dan menyimpannya dalam suatu database (PostgreSQL) dan (2) melakukan ingestion data tersebut dari database ke Google BigQuery, suatu cloud-based data warehouse. Graph dibawah dapat dilihat sebagai gambaran umum project ini.
 
 <img src='assets/project_graph.png' alt='project graph' width='50%'>
 
@@ -8,27 +8,31 @@ Seperti yang bisa kita lihat di gambar diatas, untuk seluruh local service yang 
 
 ## Cara Menggunakan
 
-Sebelum menjalankan program ini, Kita harus memastikan bahwa network yang digunakan antar container untuk berkomunikasi dengan satu sama lain sudah berjalan. Untuk itu kita bisa meng-check terlebih dahulu dan menjalankan perintah dibawah dalam terminal.
+Untuk menjalankan project ini, kita menggunakan docker. Dalam project ini, kita menggunakan 5 services yaitu 2 PostgreSQL database yaitu `application_db` dan `airflow_db`. `application_db` untuk menyimpan secara lokal geneasi data kita dan `airflow_db` untuk menyimpan metadata Airflow. Lalu services Airflow yaitu, `init_airflow` untuk meng*intialize* airflow, `webserver` yang menghost webUI airflow untuk kita berinteraksi dengan airflow, dan `scheduler` yang menjalankan orkestrasi yang telah didesain.
+
+Satu hal yang diperhatikan adalah penggunaan docker network. Docker network dibentuk dalam file docker-compose bersama `airflow_db` Dengan menggunakan network, hal tersebut memudahkan komunikasi antar container dimana kita menggunakan nama service kita sebagai *host* dan menggunakan container port yang kita tuliskan didalam file `docker-compose.yaml` kita. Hal ini juga meningkatkan security, membantu kita untuk mengawasi dan mengatur external access dengan lebih mudah.
+
+Namun, karena docker network tersebut dibuat dalam file docker compose `prod_airflow_db` maka kita harus menjalankan docker compose tersebut terlebih dahulu agar network dipersiapkan sebelum digunakan container lain. Hal itu dapat dilakukan dengan command dibawah.
 
 ```
-$ docker network ls
+docker compose -f prod_airflow_db/docker-compose.yaml up -d
+docker compose -f prod_airflow_service/docker-compose.yaml up -d
+docker compose -f app_db/docker-compose.yaml up -d
 ```
 
-lalu jika memang network yang digunakan belum berjalan kita bisa menjalankannya dengan (dalam project ini menggunakan network `application-network`)
-
-```
-$ docker network create application-network
-```
-
-Dengan menggunakan network, ini dapat memudahkan komunikasi antar container dimana kita menggunakan nama service kita sebagai *host* dan menggunakan container port yang kita tuliskan didalam file `docker-compose.yaml` kita. Hal ini juga meningkatkan security, membantu kita untuk mengawasi dan mengatur external access dengan lebih mudah.
-
-Lalu setelah memastikan network kita sudah berjalan, menjalankan docker container kita dalam ketiga directory container kita yaitu `app_db`, `prod_airflow_db,` dan `prod_airflow_service`. Jangan lupa juga untuk mematikan proccess dalam port `5432` karena container PostgreSQL kita menggunakan port tersebut sebagai `host_port`.
-
-```
-$ docker compose up -d
-```
+atau bisa saja ke kita ke directory masing-masing dan menjelankannya secara tersendiri dengan `docker compose up -d`. Namun tetap diperhatikan, kita jalankan yang berada di directory `prod_airflow_db` terlebih dahulu.
 
 Setelah itu kita bisa membuka webserver airflow di browser dengan membuka `localhost:8080/`. Di dalam web UI tersebut, karena project kita didesain untuk dijalankan setiap satu jam, kita hanya perlu mengeser tombol yang berada disebelah DAG kita.
+
+<img src='assets/dag_button.png' alt='database design' width='35%'>
+
+jika ingin memberhentika service kita berikan command:
+
+```
+docker compose -f prod_airflow_service/docker-compose.yaml down
+docker compose -f app_db/docker-compose.yaml down
+docker compose -f prod_airflow_db/docker-compose.yaml down
+```
 
 ## DAGs (Directed Acyclic Graphs)
 
