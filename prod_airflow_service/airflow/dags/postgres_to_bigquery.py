@@ -5,7 +5,7 @@ from helper.pandas_helper import automatically_change_dtypes
 from airflow.utils.task_group import TaskGroup
 from airflow.operators.python import PythonOperator
 from airflow.exceptions import AirflowSkipException
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pandas as pd
 import yaml
@@ -40,8 +40,9 @@ def creating_dataset(project_id, dataset_id, **kwargs):
 
 def ingest_data(source_table, temp_storage):
     conn = create_connection("application_postgres", "5432", "application_db", "library_admin", "letsreadbook")
+    yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
 
-    result, columns = print_query(conn, f"SELECT * FROM {source_table} WHERE created_at = CURRENT_DATE - INTERVAL '1 day';") # Jangan lupa untuk where h-1
+    result, columns = print_query(conn, f"SELECT * FROM {source_table} WHERE created_at >= '{yesterday} 00:00:00' AND created_at <= '{yesterday} 23:59:59';") # Jangan lupa untuk where h-1
 
     df = pd.DataFrame(result, columns=columns)
 
@@ -51,6 +52,10 @@ def ingest_data(source_table, temp_storage):
 def load_stg_table(source_table, temp_storage, project_id, dataset_id, destination):
     client = create_client()
     dataframe = pd.read_csv(f"{temp_storage}/{source_table}.csv")
+
+    if dataframe.empty:
+        raise AirflowSkipException(f"skipping as dataframe is empty")
+
     dataframe['created_at'] = pd.to_datetime(dataframe['created_at']) # ini jangan UTC Pastiin
     dataframe['created_at'] = dataframe['created_at'].dt.tz_localize(None) 
 
