@@ -7,7 +7,7 @@ postgres:
 
 bigquery:
   project: "purwadika"
-  dataset: "ihsan_capstone_project_3"
+  dataset: "ihsan_perpustakaan_capstone_project_3"
 
 temp_storage:
   type: "local"
