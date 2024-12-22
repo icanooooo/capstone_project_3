@@ -1,10 +1,13 @@
 # Capstone Project 3
 
-Repository ini adalah hasil kerja saya untuk tugas Capstone Project ke-3 Kelas Data Engineering Purwadhika. Secara garis besar saya diminta untuk membuat data pipeline yang mengutilisasi Airflow sebagai *orchestrator* terhadap dua DAG (Directed Acyiclic Graph). Kedua DAG tersebut bertujuan untuk (1) Generasi *dummy data* dan menyimpannya dalam suatu database (PostgreSQL) dan (2) melakukan ingestion data tersebut dari database ke Google BigQuery. Graph dibawah dapat dilihat sebagai gambaran umum project dari ini.
+Repository ini adalah hasil kerja saya untuk tugas Capstone Project ke-3 Kelas Data Engineering Purwadhika. Secara garis besar saya diminta untuk membuat data pipeline yang mengutilisasi Airflow sebagai *orchestrator* terhadap dua DAG (Directed Acyiclic Graph). Kedua DAG tersebut bertujuan untuk:
+
+1. Generasi *dummy data* dan menyimpannya dalam suatu database (PostgreSQL)
+2. melakukan ingestion data tersebut dari database ke Google BigQuery.
+
+Graph dibawah dapat dilihat sebagai gambaran umum project dari ini.
 
 <img src='assets/project_graph.png' alt='project graph' width='50%'>
-
-Seperti yang bisa kita lihat di gambar atas, untuk seluruh local service yang kita bangun (Airflow & PostgreSQL) dijalankan melalui Docker. Docker sangat membantu, karena tools tersebut memudahkan kita untuk melakukan instalasi terhadap service-service tersebut sebagaimana virtual computer namun dilakukan dalam komputer lokal kita dan bisa kita share. 
 
 ## Overview
 
@@ -14,7 +17,15 @@ Penggunaan airflow adalah untuk orkestrasi *task* dalam suatu satuan waktu yang 
 
 Google BigQuery merupakan suatu Data Warehouse, tempat dimana data disimpan untuk kebutuhan analisis. Pemisahan penyimpanan data antara operasional dan analisis ini akan berguna agar proses analisis tidak bisa menganggu proses operasional yang berjalan sangat dinamis. BigQuery juga dioptimisasi untuk kebutuhan analisis dari bagaimana service tersebut melakukan Storage dan Pricing agar lebih cost and time efficient.
 
-Project ini menggambarkan proses pipeline dari source (database perpustakaan) ke cloud data warehouse (Google BigQuery) untuk persiapan analisis. Penggunaan analisis pun bisa bermacam-macam, contohnya dalam use-case perpustakaan untuk table `rent` kita bisa melihat buku apa saja yang paling sering dipinjam sehingga perlu penambahan stok ataupun penulis siapa saja yang memiliki sewa terbanyak sehingga bisa memberikan insight komersil. 
+Project ini menggambarkan proses pipeline dari source (database perpustakaan) ke cloud data warehouse (Google BigQuery) untuk persiapan analisis. Penggunaan analisis pun bisa bermacam-macam, contohnya dalam use-case perpustakaan untuk table `rent` kita bisa melihat buku apa saja yang paling sering dipinjam sehingga perlu penambahan stok ataupun penulis siapa saja yang memiliki sewa terbanyak sehingga bisa memberikan insight komersil.
+
+### Tools
+
+- Docker
+- Airflow
+- PostgreSQL
+- Pandas
+- Google BigQuery
 
 ## Cara Menggunakan
 
@@ -22,7 +33,7 @@ Untuk menjalankan project ini, kita menggunakan docker. Dalam project ini, kita 
 
 Satu hal yang diperhatikan adalah penggunaan docker network. Docker network dibentuk dalam file docker-compose bersama `airflow_db` Dengan menggunakan network, hal tersebut memudahkan komunikasi antar container. Kita hanya perlu menggunakan nama service sebagai *host* dan menggunakan container port yang kita tuliskan didalam file `docker-compose.yaml`. Hal ini juga meningkatkan security, karena seluruh komunikasi antar service dilakukan dalam suatu internal network, hal ini membantu kita untuk mengawasi dan mengatur external access dengan lebih mudah.
 
-Namun, karena docker network tersebut dibuat dalam file docker compose untuk `airflow_db`, maka kita harus menjalankan docker compose tersebut terlebih dahulu agar network dipersiapkan sebelum digunakan container lain. Hal itu dapat dilakukan dengan menjalankan command dibawah di directory ini.
+Namun, karena docker network tersebut dibuat dalam file docker compose untuk `airflow_db`, maka kita harus menjalankan docker compose tersebut terlebih dahulu agar network dipersiapkan sebelum digunakan container lain. Hal itu dapat dilakukan dengan menjalankan command dibawah di directory project ini.
 
 ```
 docker compose -f prod_airflow_db/docker-compose.yaml up -d
@@ -30,13 +41,11 @@ docker compose -f prod_airflow_service/docker-compose.yaml up -d
 docker compose -f app_db/docker-compose.yaml up -d
 ```
 
-atau bisa saja ke kita ke directory masing-masing dan menjalankannya secara tersendiri dengan `docker compose up -d`. Namun tetap diperhatikan, kita dahulukan contrainer `airflow_db` sebelum menjalankan container lain.
-
 Setelah itu kita bisa membuka webserver airflow di browser dengan membuka `localhost:8080`. Di dalam web UI tersebut, karena project kita didesain untuk dijalankan setiap satu jam, kita hanya perlu mengeser tombol yang berada disebelah DAG kita.
 
 <img src='assets/dag_button.png' alt='database design' width='35%'>
 
-jika ingin memberhentikan service kita bperintahkan command:
+jika ingin memberhentikan service kita berikan command:
 
 ```
 docker compose -f prod_airflow_service/docker-compose.yaml down
@@ -52,16 +61,20 @@ Dalam DAG pertama kita, kita diminta untuk generate database dengan schema seper
 
 <img src='assets/database_design.png' alt='database design' width='50%'>
 
-Cara untuk menggenerate data tersebut adalah dengan menggunakan API random name generator untuk nama member dan OpenLibrary untuk Judul Buku.
 
 Masing-masing tabel memiliki *primary key* masing-masing yang menjadi *foreign key* didalam table *rent_table*. *primary key* juga berurutan, memudahkan kita untuk menggunakan *primary key* terakhir untuk menggenerasi *primary key* selanjutnya.
 
 <img src='assets/generate_data_dag.png' alt='generate_data_dag' width='90%'>
 
+#### Get ID list
 Dari gambar diatas, kita dapat melihat bahwa sebelum kita generate data, kita akan mengambil id list dari masing-masing tabel di PostgreSQL (akan menjadi 0 pada generate pertama), hal ini dilakukan untuk memastikan meng-generate id baru.
+
+#### Generate Data
+Cara untuk menggenerate data tersebut adalah dengan menggunakan API random name generator untuk nama member dan OpenLibrary untuk Judul Buku.
 
 Lalu setelah itu kita menjalankan secara bersamaan generate data pada tabel `books_table` dan `library_member`. Hal ini dilakukan terlebih dahulu, karena untuk generate data pada `rent_data` kita akan mengambil id dari dua tabel sebelumnya dan dipilih secara random.
 
+#### Insert to PostgreSQL
 setelah semua data di generate, kita akan masing-masing insert datanya kedalam PostgreSQL dengan menggunakan *library* psycopg2 melalui helper file `postgres_app_helper`.
 
 ### (2) PostgreSQL to BigQuery
@@ -72,10 +85,16 @@ Dalam DAG ini, kita diminta untuk melakukan ingestion dari data yang telah kita 
 
 Proses dari DAG ini didahulukan dengan menggunakan task `check_dataset` yang akan mememeriksa apakah dataset sudah tersedia pada BigQuery target. Tergantung hasil return dari *check_dataset*, jika `True` maka `create_dataset` task akan menjalankan pembuatan dataset. Bila hasil return `False` , maka task `create_dataset` akan di skip sebagaimana graph diatas.
 
+#### Trigger Rule
+
 Karena task sebelumnya di skip, kita harus memastikan `trigger_rule` untuk task selanjutnya. Karena secara *default* `trigger_rule` yang digunakan adalah `all_success`, yang memastikan bahwa task sebelumnya harus berhasil berjalan. Kita akan mengubah value `trigger_rule` dalam task selanjutanya menjadi `none_failed`, karena dalam kasus ini task sebelumnya di skip namun tidak *failed*.
+
+#### YAML file for dynamic DAGs
 
 Dalam membuat DAG ini, kita menggunakan yaml file sebagai configuration file yang menyimpan detail informasi tabel kita. Penggunaan file yaml membantu karena ini dapat digunakan untuk *dynamic dag*, menggunakan template untuk beberapa table yang berada di configuration file.
 
 Seperti yang kita lihat diatas setiap table diproses dengan template task yang sama. (1) kita melakukan ingestion dari PostgreSQL dengan library pandas dan menyimpannya sebagai csv dalam temporary storage kita, (2) kita melakukan load staging table dengan menggunakan Google Cloud Python API secara incremental, dan (3) kita melakukan upsert ke final table kita secara incremental.
+
+#### Upsert Table
 
 Penggunaan staging table dengan final/production table membantu untuk memastikan bahwa final table sudah siap digunakan dan segala pemrosesan yang belum selesai dilakukan di staging table.
