@@ -12,10 +12,12 @@ import yaml
 import os
 import pytz
 
+# Loading the app_db.yaml file as config
 def load_config():
     with open("/opt/airflow/dags/configs/app_db.yaml", "r") as file:
         return yaml.safe_load(file)
 
+# Checking Dataset Status
 def check_dataset_exist(project_id, dataset_id):
     result = check_dataset(project_id, dataset_id)
 
@@ -27,17 +29,19 @@ def check_dataset_exist(project_id, dataset_id):
 
     return {'status': status} #return must be in json format
 
+# Create dataset based on previous taks
 def creating_dataset(project_id, dataset_id, **kwargs):
     ti = kwargs['ti']
     status = ti.xcom_pull(task_ids='check_dataset')['status']
 
+    # If status is True then we don't need to create dataset, skipping wirh AirflowSkipException
     if status:
         raise AirflowSkipException(f"skipping as {dataset_id} already exist")
     else:
         print(f"dataset does not exist, proceed in creating dataset")
         create_dataset(project_id, dataset_id)  
 
-
+# Ingesting data from PostgreSQL and save it at temporary storage
 def ingest_data(source_table, temp_storage):
     conn = create_connection("application_postgres", "5432", "application_db", "library_admin", "letsreadbook")
     yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
@@ -49,10 +53,12 @@ def ingest_data(source_table, temp_storage):
     temp_file_path = os.path.join(temp_storage, f"{source_table}.csv")
     df.to_csv(temp_file_path, index=False)
 
+# Load staging table using WRITE_APPEND, adding only new data without rewriting the previous one
 def load_stg_table(source_table, temp_storage, project_id, dataset_id, destination):
     client = create_client()
     dataframe = pd.read_csv(f"{temp_storage}/{source_table}.csv")
 
+    # if dataframe is empty skip the task to avoid created table with wrong data types
     if dataframe.empty:
         raise AirflowSkipException(f"skipping as dataframe is empty")
 
@@ -67,6 +73,7 @@ def load_stg_table(source_table, temp_storage, project_id, dataset_id, destinati
 
     print(f"loaded {dataframe.shape[0]} row to {destination}")
 
+# Upserting table, ensuring that production table is the most updated version
 def upsert_table(temp_storage, source_table, project_id, dataset_id, stage_id, destination_id):
     client = create_client()
 
@@ -116,12 +123,15 @@ def create_dag():
 
         grouped_task = []
 
+        # Looping over the tables in the config file to avoid repetitive code
         for table in config["tables"]:
             source_table = table["source"]
             staging_table = table["staging_table"]
             destination_bq = table["destination"]
 
+            # Create taskgroup for each table (books, member, rent)
             with TaskGroup(f"load_{source_table}", tooltip=f"load {source_table} tasks") as table_group:
+                # Added triger rule 'none_failed' so it still runs even though previous task is skipped
                 ingest_task=PythonOperator(
                     task_id=f"ingest_{source_table}",
                     python_callable=ingest_data,
@@ -129,7 +139,7 @@ def create_dag():
                         "source_table": source_table,
                         "temp_storage": temp_storage,
                     },
-                    trigger_rule="none_failed"
+                    trigger_rule="none_failed" 
                 )
 
                 insert_stg_bq=PythonOperator(
