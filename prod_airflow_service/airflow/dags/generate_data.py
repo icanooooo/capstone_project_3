@@ -5,6 +5,7 @@ from airflow.utils.task_group import TaskGroup
 from helper.postgres_app_helper import ensure_table, get_data_id_list, insert_data, insert_book_data, insert_member_data, insert_rent_data
 from helper.generate_data import generate_book_data, generate_member_data, generate_rent_data
 
+# Generating ID list from PostgreSQL or starts from 0 if PostgreSQL is empty
 def generate_id_list():
     ensure_table()
 
@@ -12,6 +13,7 @@ def generate_id_list():
 
     return {'book_id_list': book_result, 'member_id_list': member_result, 'rent_id_list': rent_result}
 
+# Generate Books using Openlibrary API
 def generate_books(**kwargs):
     ti = kwargs['ti']
     book_id_list = ti.xcom_pull(task_ids='get_id_list')['book_id_list'][0]
@@ -23,12 +25,14 @@ def generate_books(**kwargs):
 
     return book_data
 
+# Insert Books to Postgres
 def insert_books(**kwargs):
     ti = kwargs['ti']
     book_data = ti.xcom_pull(task_ids='Books.generate_book_data')
 
     insert_book_data(book_data)
 
+# Generate member using random.choice and randomuser API for firstname
 def generate_member(**kwargs):
     ti = kwargs['ti']
     member_id_list = ti.xcom_pull(task_ids='get_id_list')['member_id_list'][0] # return dari sini adalah list
@@ -40,19 +44,24 @@ def generate_member(**kwargs):
 
     return member_data
 
+# Insert Member to Postgres
 def insert_member(**kwargs):
     ti = kwargs['ti']
     member_data = ti.xcom_pull(task_ids='Members.generate_member_data')
 
     insert_member_data(member_data)
 
+# Generating rent Transaction
 def generate_rent_transaction(**kwargs):
     ti = kwargs['ti']
     all_ids = ti.xcom_pull(task_ids='get_id_list')
+    
+    # Using all generated books and member IDs from PostgreSQL
     book_id_list = all_ids['book_id_list'][0]
     member_id_list = all_ids['member_id_list'][0]
     rent_id_list = all_ids['rent_id_list'][0]
 
+    # If postgres is empty, ID's for books and member will be taken from generated member and book task
     if not book_id_list:
         book_data = ti.xcom_pull(task_ids='Books.generate_book_data')
         book_id_list = [book['id'] for book in book_data]
@@ -66,6 +75,7 @@ def generate_rent_transaction(**kwargs):
 
     return rent_data
     
+# Insert to Rent Table
 def insert_rent_transaction(**kwargs):
     ti = kwargs['ti']
     rent_data = ti.xcom_pull(task_ids='RentTransactions.generate_rent_data')
@@ -78,8 +88,10 @@ with DAG('generate_data_dag',
          schedule_interval='15 * * * *', # Dilakukan setiap jam di menit ke 15 (01.15, 02.15, seterusnya..)
          catchup=False) as dag:
 
+    # generate Id list task
     generateIdList = PythonOperator(task_id='get_id_list', python_callable=generate_id_list)
 
+    # Created three Task Group for each Tables
     with TaskGroup("Books") as book_data:
         generateBookData = PythonOperator(task_id='generate_book_data', python_callable=generate_books)
         insertBookData = PythonOperator(task_id='insert_book_data', python_callable=insert_books)

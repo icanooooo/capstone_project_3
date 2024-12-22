@@ -1,6 +1,6 @@
 # Capstone Project 3
 
-Repository ini adalah hasil kerja saya untuk tugas Capstone Project ke-3 Kelas Data Engineering Purwadhika. Secara garis besar saya diminta untuk membuat data pipeline yang mengutilisasi Airflow sebagai *orchestrator* terhadap dua DAG (Directed Acyiclic Graph). Kedua DAG tersebut bertujuan untuk:
+Repository ini adalah hasil kerja saya untuk tugas Capstone Project ke-3 Kelas Data Engineering Purwadhika. Secara garis besar saya diminta untuk membuat data pipeline yang mengutilisasi Airflow sebagai *orchestrator* terhadap dua DAG (Directed Acyclic Graph). Kedua DAG tersebut bertujuan untuk:
 
 1. Generasi *dummy data* dan menyimpannya dalam suatu database (PostgreSQL)
 2. melakukan ingestion data tersebut dari database ke Google BigQuery.
