@@ -6,6 +6,16 @@ Repository ini adalah hasil kerja saya untuk tugas Capstone Project ke-3 Kelas D
 
 Seperti yang bisa kita lihat di gambar atas, untuk seluruh local service yang kita bangun (Airflow & PostgreSQL) dijalankan melalui Docker. Docker sangat membantu, karena tools tersebut memudahkan kita untuk melakukan instalasi terhadap service-service tersebut sebagaimana virtual computer namun dilakukan dalam komputer lokal kita dan bisa kita share. 
 
+## Overview
+
+Dalam project, kita diminta membuat Kedua DAG tersebut dalam suatu studi kasus. Studi kasus yang saya pilih adalah sistem data pipeline untuk suatu perpustakaan yang menyimpan data Buku (Books), anggota (Member), dan sewa (Rent). 
+
+Penggunaan airflow adalah untuk orkestrasi *task* dalam suatu satuan waktu yang dapat di otomatisasi. Dalam kasus ini, kita akan mengambil data dari database perpustakaan (yang kita akan generate dummy data seakan database operasional) dan memasukkannya kedalam BigQuery. *Task* tersebut kita akan desain untuk berjalan setiap jam pada menit 15, membantu menghilangkan perlunya laporan manual dari tim operasi mengenai data perpustakaan kepada tim strategic dan data didapatkan secara cepat tanpa perlu menunggu anggota tim lain.
+
+Google BigQuery merupakan suatu Data Warehouse, tempat dimana data disimpan untuk kebutuhan analisis. Pemisahan penyimpanan data antara operasional dan analisis ini akan berguna agar proses analisis tidak bisa menganggu proses operasional yang berjalan sangat dinamis. BigQuery juga dioptimisasi untuk kebutuhan analisis dari bagaimana service tersebut melakukan Storage dan Pricing agar lebih cost and time efficient.
+
+Project ini menggambarkan proses pipeline dari source (database perpustakaan) ke cloud data warehouse (Google BigQuery) untuk persiapan analisis. Penggunaan analisis pun bisa bermacam-macam, contohnya dalam use-case perpustakaan untuk table `rent` kita bisa melihat buku apa saja yang paling sering dipinjam sehingga perlu penambahan stok ataupun penulis siapa saja yang memiliki sewa terbanyak sehingga bisa memberikan insight komersil. 
+
 ## Cara Menggunakan
 
 Untuk menjalankan project ini, kita menggunakan docker. Dalam project ini, kita menggunakan 5 services yaitu 2 PostgreSQL database yaitu `application_db` dan `airflow_db`. `application_db` untuk menyimpan secara lokal geneasi data kita dan `airflow_db` untuk menyimpan metadata Airflow. Lalu kita menggunakan 3 services Airflow yaitu, `init_airflow` untuk meng*intialize* airflow, `webserver` yang menghost webUI airflow untuk kita berinteraksi dengan airflow, dan `scheduler` yang menjalankan orkestrasi yang telah didesain.
