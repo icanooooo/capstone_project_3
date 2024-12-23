@@ -34,7 +34,7 @@ def generate_member_data(last_id_number): #Menerima hanya int
     return data
 
 def generate_book_data(last_id_number): # Hanya menerima int
-    response = requests.get('https://openlibrary.org/subjects/english.json?limit=200')
+    response = requests.get('https://openlibrary.org/subjects/english.json?limit=400')
 
     if response.status_code == 200:
         all_books = []
