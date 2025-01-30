@@ -1,9 +1,10 @@
 from airflow import DAG
-from datetime import datetime
+from datetime import datetime, timedelta
 from airflow.operators.python import PythonOperator
 from airflow.utils.task_group import TaskGroup
 from helper.postgres_app_helper import ensure_table, get_data_id_list, insert_data, insert_book_data, insert_member_data, insert_rent_data
 from helper.generate_data import generate_book_data, generate_member_data, generate_rent_data
+from helper.alert_helper import send_failure_to_discord
 
 # Generating ID list from PostgreSQL or starts from 0 if PostgreSQL is empty
 def generate_id_list():
@@ -82,9 +83,17 @@ def insert_rent_transaction(**kwargs):
 
     insert_rent_data(rent_data)
 
+default_args = {
+    'owner' : 'ican',
+    'retries' : 1,
+    'retry_delay' : timedelta(minutes=1),
+    'on_failure_callback' : send_failure_to_discord,
+}
+
 with DAG('generate_data_dag',
          start_date=datetime(2024, 12, 19),
          tags=['app_dag'],
+         default_args=default_args,
          schedule_interval='15 * * * *', # Dilakukan setiap jam di menit ke 15 (01.15, 02.15, seterusnya..)
          catchup=False) as dag:
 

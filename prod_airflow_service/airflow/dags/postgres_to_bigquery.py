@@ -2,6 +2,7 @@ from airflow import DAG
 from helper.postgres_app_helper import create_connection, print_query
 from helper.bigquery_helper import create_client, upsert_data, incremental_load, check_dataset, create_dataset
 from helper.pandas_helper import automatically_change_dtypes
+from helper.alert_helper import send_failure_to_discord
 from airflow.utils.task_group import TaskGroup
 from airflow.operators.python import PythonOperator
 from airflow.exceptions import AirflowSkipException
@@ -94,12 +95,20 @@ def create_dag():
     project_id = config["bigquery"]["project"]
     dataset_id = config["bigquery"]["dataset"]
 
+    default_args = {
+        'owner' : 'ican',
+        'retries' : 1,
+        'retry_delay' : timedelta(minutes=1),
+        'on_failure_callback' : send_failure_to_discord,
+    }
+
     os.makedirs(temp_storage, exist_ok=True)
 
     with DAG(
         "library_postgres_db_to_bigquery",
         start_date=datetime(2024, 12, 20),
         tags=['bigquery_dags'],
+        default_args=default_args,
         schedule_interval='15 * * * *', # setiap jam dalam menit ke 15 (01.15, 02.15, seterusnya..)
         catchup=False) as dag:
 
