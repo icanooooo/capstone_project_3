@@ -1,0 +1,21 @@
+services:
+    dbt:
+        build:
+            context: .
+            dockerfile: Dockerfile
+            target: dbt-bigquery
+        user: root
+        networks:
+            - application-network
+        env_file:
+            - .env
+        volumes:
+            - ./library_dbt:/opt/dbt/library_dbt
+            - ./logs:/opt/dbt/logs
+            - ./profiles:/opt/dbt/profiles
+            - ./keys:/opt/dbt/keys
+        entrypoint: ["/bin/sh", "-c", "sleep infinity"]
+
+networks:
+    application-network:
+        external: true
