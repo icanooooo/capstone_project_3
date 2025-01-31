@@ -9,7 +9,7 @@ def send_failure_to_discord(context):
     exception = context.get('exception')
 
     message = {
-        "content": f"**DAG Failed**\n DAG: {dag_name}\ntask: {task_name}\nException: {exception}"
+        "content": f"**DAG Failed**\nDAG: {dag_name}\ntask: {task_name}\nException: {exception}\n"
     }
 
     requests.post(webhook_url, json=message)

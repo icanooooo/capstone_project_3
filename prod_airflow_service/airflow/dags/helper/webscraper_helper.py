@@ -1,7 +1,6 @@
 from bs4 import BeautifulSoup
 from selenium import webdriver
-from selenium.webdriver.firefox.service import Service
-from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.chrome.options import Options
 from datetime import datetime
 
 import pandas as pd
@@ -9,20 +8,14 @@ import re
 
 # Mesti pake selenium
 
-def get_data_asetku(url, geckodriver):
-    class AsetkuData:
-        def __init__(self):
-            self.data = []
-        def append_data(self, value):
-            self.data.append(value)
+def get_data_asetku(url):
+    chrome_options = Options()
+    chrome_options.add_argument('--headless')  # Run in headless mode
+    chrome_options.add_argument('--no-sandbox')
+    chrome_options.add_argument('--disable-dev-shm-usage')
 
-    asetkuObject = AsetkuData()
-
-    options = Options()
-    options.add_argument("--headless")
-    service = Service(geckodriver)
-
-    driver = webdriver.Firefox(service=service, options=options)
+    # Set the path to ChromeDriver (it is bundled with the Selenium WebDriver)
+    driver = webdriver.Chrome(options=chrome_options)
 
     driver.get(url)
 
