@@ -100,3 +100,7 @@ Seperti yang kita lihat diatas setiap table diproses dengan template task yang s
 #### Upsert Table
 
 Penggunaan staging table dengan final/production table membantu untuk memastikan bahwa final table sudah siap digunakan dan segala pemrosesan yang belum selesai dilakukan di staging table.
+
+#### Footnote
+
+Ini akan dilanjutkan dalam repository final project <3
